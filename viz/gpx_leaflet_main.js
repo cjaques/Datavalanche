@@ -1,7 +1,9 @@
 // 
 // C.Jaques, christian.jaques@idiap.ch, November 2018
 //
-// Inspired from DataViz exercise session 8, http://bl.ocks.org/d3noob/9267535, https://github.com/chrissng/d3.gpx
+// Inspired from DataViz exercise session 8, 
+//      http://bl.ocks.org/d3noob/9267535, 
+//      https://github.com/chrissng/d3.gpx
 // 
 var map;
 var feature;
@@ -62,14 +64,12 @@ class MapPlot {
 
 
     constructor(svg_element_id) {
-        // this.svg = d3.select('#' + svg_element_id);
-
-        map = L.map('map').setView([46.8, 8.2], 7);
+        map = L.map('map').setView([46.8, 8.2], 7); // center and zoom
         const mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
         L.tileLayer(
             'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; ' + mapLink + ' Contributors',
-            maxZoom: 18,
+            maxZoom: 16,
             }).addTo(map);
                 
         // Initialize the SVG layer
@@ -116,21 +116,19 @@ class MapPlot {
             }
 
             // Draw the GPX points
-            // FIXME -- make this work with all GPX traces, not only1
             feature = [];
-            for(var i = 0; i<gpx_data.length; i++){
-                console.log(gpx_data[i]);
-                feature[i] = this.svg.selectAll("circle")
-                .data(gpx_data[i])
-                .enter()
-                .append("circle")
-                .attr("cx", function(d){return map.latLngToLayerPoint([d[1], d[0]]).x}) //return d[1];}) 
-                .attr("cy", function(d){return map.latLngToLayerPoint([d[1], d[0]]).y})//return d[1];})return d[0];})
-                .attr("r", 10)
-                .style("fill", "#ff6b06")
-                .style("opacity", 0.8);
-                console.log(feature);
-            }
+            // store all points in a single array before adding them to the map, otherwise update function doesn't work
+            var gpx_data_flat= gpx_data[0];
+             for(var i = 1; i<gpx_data.length; i++){
+                 gpx_data_flat = gpx_data_flat.concat(gpx_data[i]);
+             }  
+            feature = this.svg.selectAll("circle")
+            .data(gpx_data_flat)
+            .enter()
+            .append("circle")
+            .attr("r", 10)
+            .style("fill", "#ff6b06")
+            .style("opacity", 0.8);
 
             map.on("viewreset", this.update);
             this.update();
@@ -138,16 +136,13 @@ class MapPlot {
     }
 
     update() {
-        for(var i =0; i<feature.length; i++){
-            console.log('HERE--', i)
-            feature[i].attr("transform", 
-            function(d) { 
-                return "translate("+ 
-                    map.latLngToLayerPoint([d[1], d[0]]).x +","+ 
-                    map.latLngToLayerPoint([d[1], d[0]]).y +")";
-                }
-            )
-        }
+        feature.attr("transform", 
+        function(d) { 
+            return "translate("+ 
+                map.latLngToLayerPoint([d[1], d[0]]).x +","+ 
+                map.latLngToLayerPoint([d[1], d[0]]).y +")";
+            }
+        )
     }
 
 }
