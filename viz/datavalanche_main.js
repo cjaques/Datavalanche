@@ -15,7 +15,7 @@ var feature;
 class MapPlot {
 
     constructor(svg_element_id) {
-        map = L.map('map').setView([46.8, 8.2], 8); // center and zoom
+        map = L.map('map').setView([46.8, 8.2], 8); // center and zoom for Switzerland
         const mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
         this.mainLayer = L.tileLayer(
             'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -39,8 +39,8 @@ class MapPlot {
         this.g = this.svg.append("g");
 
 
-        const file_list =  read_text_file("data/files_2.txt"); // read data/files.txt  ["data/morcles.gpx", "data/mumi.gpx", "data/mu.gpx"];
-        var array_list = file_list.split("\n"); //  JSON.parse("[" + file_list.split("\n") + "]");
+        const file_list =  read_text_file("data/files_2.txt"); // files.txt and files_2.txt contain a list of all GPX files
+        var array_list = file_list.split("\n");
 
 
         let all_promises = [];
@@ -70,7 +70,7 @@ class MapPlot {
                         nameli = this.innerHTML;
                     })
 
-                    // GPX files are filled in various ways
+                    // GPX traces
                     d3.select(data).selectAll("rte").selectAll("rtept").each(function() {
                         var lat = parseFloat(d3.select(this).attr("lat"));
                         var lon = parseFloat(d3.select(this).attr("lon"));
@@ -82,7 +82,7 @@ class MapPlot {
                         lineString.push({"lon": lon, "lat" : lat, "name":nameli, "id":idx});
                     });
                     resolve(lineString);
-                    idx += 1; // update idx
+                    idx += 1; // update idx to be able to differentiate gpx traces
                 })
             }));
         };
@@ -95,21 +95,16 @@ class MapPlot {
             }
 
             // Draw the GPX points
-            feature = [];
             // store all points in a single array before adding them to the map, otherwise update function doesn't work
-            var gpx_data_flat= gpx_data[0];
-             for(var i = 1; i<gpx_data.length; i++){
-                 gpx_data_flat = gpx_data_flat.concat(gpx_data[i]);
-             }  
-
             var points_array = [];
-            for(var i =0; i<gpx_data_flat.length; i++){
-                points_array.push([gpx_data_flat[i]['lat'], gpx_data_flat[i]['lon'], 0.1])
+            // everything within a double loop to be a bit faster
+            for(var i=0; i<gpx_data.length; i++){
+                for(var j=0; j<gpx_data[i].length; j++){
+                    points_array.push([gpx_data[i][j]['lat'], gpx_data[i][j]['lon'], 0.1])
+                }
             }
-            var heat = L.heatLayer(points_array, {radius:15, max:0.5, gradient: {0.2: 'blue', 0.6: 'lime', 1: 'yellow'}});
-            // heat.setOpacity(0.2)
-            heat.addTo(map);
-            
+            var heat = L.heatLayer(points_array, {radius:15, gradient: {0.2: 'blue', 0.6: 'lime', 1: 'yellow'}});
+            heat.addTo(map)
         });
     }
 }

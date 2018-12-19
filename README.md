@@ -20,4 +20,6 @@ data ----- viz ----- scripts
 
 * [swiss topo elevation map](http://bl.ocks.org/herrstucki/6312708)
 * [swiss maps data](https://github.com/interactivethings/swiss-maps)
-* 
+* [Leaflet](https://leafletjs.com/)
+* [Leaflet heatmap plugin](https://github.com/Leaflet/Leaflet.heat)
+* [Camptocamp](https://www.camptocamp.org/)
