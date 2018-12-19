@@ -4,6 +4,7 @@
 // Inspired from DataViz exercise session 8, 
 //      http://bl.ocks.org/d3noob/9267535, 
 //      https://github.com/chrissng/d3.gpx
+//      https://github.com/Leaflet/Leaflet.heat
 // 
 
 // globals
@@ -38,7 +39,7 @@ class MapPlot {
         this.g = this.svg.append("g");
 
 
-        const file_list =  read_text_file("data/files.txt"); // read data/files.txt  ["data/morcles.gpx", "data/mumi.gpx", "data/mu.gpx"];
+        const file_list =  read_text_file("data/files_2.txt"); // read data/files.txt  ["data/morcles.gpx", "data/mumi.gpx", "data/mu.gpx"];
         var array_list = file_list.split("\n"); //  JSON.parse("[" + file_list.split("\n") + "]");
 
 
@@ -91,7 +92,6 @@ class MapPlot {
             let gpx_data = [];
             for (i=0; i< array_list.length-1; i++){
                 gpx_data.push(results[i]);
-                console.log("i : ", i, " ", gpx_data[i]);
             }
 
             // Draw the GPX points
@@ -102,43 +102,15 @@ class MapPlot {
                  gpx_data_flat = gpx_data_flat.concat(gpx_data[i]);
              }  
 
-
-            feature = this.svg.selectAll("circle")
-            .data(gpx_data_flat)
-            .enter()
-            .append("circle")
-            .attr("r", 4)
-            .style("fill", "#ff6b06")
-            .style("opacity", 0.8)
-            .on("click", function(d){
-                var popup = L.popup()
-                            .setLatLng([d['lat'], d['lon']]) // latlng)
-                            .setContent(d['name'])
-                            .openOn(map);
-                var marker = L.marker().addTo(map);
-                marker.setOpacity(0);
-                marker.bindPopup(d['name']).openPopup();
-            });
-
-            // var points_array = [];
-            // for(var i =0; i<gpx_data_flat.length; i++){
-            //     points_array.push([gpx_data_flat[i]['lat'], gpx_data_flat[i]['lon'], 0.1])
-            // }
-            // var heat = L.heatLayer(points_array, {radius: 4}).addTo(map);
-            
-            map.on("viewreset", this.update);
-            this.update();
-        });
-    }
-
-    update() {
-        feature.attr("transform", 
-        function(d) { 
-            return "translate("+ 
-                map.latLngToLayerPoint([d["lat"], d["lon"]]).x +","+ 
-                map.latLngToLayerPoint([d["lat"], d["lon"]]).y +")";
+            var points_array = [];
+            for(var i =0; i<gpx_data_flat.length; i++){
+                points_array.push([gpx_data_flat[i]['lat'], gpx_data_flat[i]['lon'], 0.1])
             }
-        )
+            var heat = L.heatLayer(points_array, {radius:15, max:0.5, gradient: {0.2: 'blue', 0.6: 'lime', 1: 'yellow'}});
+            // heat.setOpacity(0.2)
+            heat.addTo(map);
+            
+        });
     }
 }
 
