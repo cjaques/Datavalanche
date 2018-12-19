@@ -23,3 +23,5 @@ data ----- viz ----- scripts
 * [Leaflet](https://leafletjs.com/)
 * [Leaflet heatmap plugin](https://github.com/Leaflet/Leaflet.heat)
 * [Camptocamp](https://www.camptocamp.org/)
+* [Read xml files with D3](https://github.com/chrissng/d3.gpx)
+* [D3 + Leaflet example](http://bl.ocks.org/d3noob/9267535)
