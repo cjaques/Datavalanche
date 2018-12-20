@@ -1,10 +1,10 @@
-// 
+//
 // Copyright T. Kulak, E. Pignat, C.Jaques, name DOT surname AT idiap DOT ch, December 2018
 //
 //      DATAVALANCHE PROJECT DECEMBER 2018
 //
 //      Project for K.Benzi's EPFL course "Data Visualisation"
-// 
+//
 
 // ------------------------------------------------------------------------ GLOBALS
 var map;
@@ -24,9 +24,9 @@ class MapPlot {
             attribution: '&copy; ' + mapLink + ' Contributors',
             maxZoom: 16,
             }).addTo(map);
-                
+
         // Initialize the SVG layer
-        map._initPathRoot()    
+        map._initPathRoot()
 
         // DEBUG BELOW -- trying to add a sliderControl
         // slider control
@@ -40,18 +40,18 @@ class MapPlot {
         this.svg = d3.select("#map").select("svg");
         // this.g = this.svg.append("g");
 
-        const file_list =  read_text_file("data/files_2.txt"); // files.txt and files_2.txt contain a list of all GPX files
+        const file_list =  read_text_file("data/files.txt"); // files.txt and files_2.txt contain a list of all GPX files
         let array_list = file_list.split("\n");
         let all_promises = [];
 
         // read avalanches locations, including orientation
         all_promises.push(new Promise(function(resolve, reject){
-            d3.csv("data/locations_avalanches_orientation.csv", function(data){
+            d3.csv("data/locations_avalanches_fullfeatures.csv", function(data){
                 resolve(data);
             });
         }));
 
-        // go through all GPX files in list 
+        // go through all GPX files in list
         let idx = 0;
         for(let i=0; i<array_list.length - 1; i++){ // -1 because sometimes the last item of the list is empty
             all_promises.push(new Promise(function(resolve, reject){
@@ -115,12 +115,10 @@ class MapPlot {
 
 
             // Draw avalanches
-            avalanche_points_features = this.svg.selectAll("circle")
+            avalanche_points_features = this.svg.selectAll("g")
                 .data(avalanches_points)
                 .enter()
-                .append("circle")
-                .attr("class", "point")
-                .attr("r", 5);
+                .append("g");
 
             map.on("viewreset", update_map);
             update_map();
@@ -134,27 +132,38 @@ class MapPlot {
 // ------------------------------------------------------------------------ HELPER FUNCTIONS
 function update_map(){
     let count = 0;
+    console.log(map.getZoom());
     avalanche_points_features
-        .attr("cx", function(d){let rad = 2 * map.getZoom() - 4; 
-                                return map.latLngToLayerPoint([d["lat"], d["lon"]]).x + rad * Math.cos(d['orientation']);})
-        .attr("cy", function(d){let rad = 2* map.getZoom() - 4;
-                                return map.latLngToLayerPoint([d["lat"], d["lon"]]).y + rad * Math.sin(d['orientation']);})
-        .style("fill", "#ff6b06")
-        .style("r", function(){return map.getZoom() - 3;}) // adapt avalanche point size to zoom level
-        .style("opacity", 0.7)
-        .transition()
-            .duration(500)
-            .ease("exp-in-out") // .ease(d3.easeLinear)
-            .attr("cx", function(d){let rad = 2 * map.getZoom() - 4; 
-                                    return map.latLngToLayerPoint([d["lat"], d["lon"]]).x - rad * Math.cos(d['orientation']);})
-            .attr("cy", function(d){let rad = 2* map.getZoom() - 4; 
-                                    return map.latLngToLayerPoint([d["lat"], d["lon"]]).y - rad * Math.sin(d['orientation']);})
-            .each("end", function(){
-                    count = count+1;
-                    if(count==avalanches_points.length){
-                        update_map();
-                    }
-            });
+        .attr("class", "avalanche")
+        .attr("transform", function(d){return "translate("+map.latLngToLayerPoint([d["lat"], d["lon"]]).x+","+map.latLngToLayerPoint([d["lat"], d["lon"]]).y+")"})
+         .style("r", function(){return map.getZoom() - 3;})
+        .html(function(d,i) {
+          let valueOrientation = d["orientation"], valueForecasted =d["forecasted"], valueDead =d["dead"], valueElevation=d["elevation"];
+            d = $.extend(d,
+             {'width': 100,
+             'valueOrientation':function(d){
+                 if(map.getZoom()>=12){
+                   return ""+valueOrientation;}
+                   else{return "";}
+                 },
+             'valueForecasted':function(d){
+                 if(map.getZoom()>=12){
+                   return ""+Math.floor(valueForecasted)+"/5";}
+                   else{return "";}
+                 },
+             'valueDead':function(d){
+                 if(map.getZoom()>=12){
+                   return ""+valueDead+" dead";}
+                   else{return "";}
+                 },
+             'valueElevation':function(d){
+                 if(map.getZoom()>=12){
+                   return ""+valueElevation+"m";}
+                   else{return "";}
+                 }
+             })
+            return ich.avalanche(d, true);
+        });
 }
 
 

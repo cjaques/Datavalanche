@@ -3,8 +3,8 @@
 <head>
 	<title>Datavalanche</title>
 
-    <link 
-        rel="stylesheet" 
+    <link
+        rel="stylesheet"
         href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css"
     />
     <link rel="stylesheet" href="main.css">
@@ -14,12 +14,24 @@
     <!-- <script src="lib/d3.min.js"></script> -->
     <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
     <script src="lib/leaflet-heat.js"></script>
+		<script src="lib/ICanHaz.min.js" ></script>
+		<script src="lib/jquery-1.10.2.min.js"></script>
+		<script src="lib/innersvg.js"></script>
     <!-- <script type="text/javascript" src="SliderControl.js"></script> -->
-    
+
 </head>
+
+<script id="avalanche" type="text/html">
+<circle r="5" fill="#ff6b06" opacity="0.7" />
+<text transform="translate(-13 -15)" fill="#ff6b06" font-family="'Exo-DemiBold'" font-size="20">{{valueOrientation}}</text>
+<text transform="translate(-13 25)" fill="#ff6b06" font-family="'Exo-DemiBold'" font-size="20">{{valueForecasted}}</text>
+<text transform="translate(10 5)" fill="#ff6b06" font-family="'Exo-DemiBold'" font-size="20">{{valueDead}}</text>
+<text transform="translate(-70 5)" fill="#ff6b06" font-family="'Exo-DemiBold'" font-size="20">{{valueElevation}}</text>
+</script>
+
 <body>
     <input type="range" min="0" max="150" id="nRadius">
-	<div id="map" style="width: 900px; height: 900px"></div> 
+	<div id="map" style="width: 900px; height: 900px"></div>
 	<script type="text/javascript" src="datavalanche_main.js"></script>
 </body>
 </html>
