@@ -1,21 +1,49 @@
 body {
-	font: 16px sans-serif;
+    margin:0px;
+    padding:0px;
+    text-align: left;
 }
 
-.canton-boundary {
-  fill: none;
-  stroke: #fff;
-  stroke-linejoin: round;
+#map {
+    height: 800px;
+    width: 100%;
+}
+#slider {
+    height: 20px;
+    width: 100%;
 }
 
-.avalanche{
 
+.info {
+    font: 30px "Helvetica";
+    margin:  22px;
 }
 
-.avalanche circle{
-
+.tooltip {
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    left: -9999px;
 }
 
-.avalanche text{
-	
+.tooltip > svg{ margin:auto; display: block; }
+
+.bubble {
+    font: 14px Helvetica;
+    text-anchor: middle;
+    alignment-baseline: central;
 }
+.dead {
+    fill: white;
+    color: white;
+    font-weight: bold;
+}
+.expo {
+    fill: black;
+    font-weight: bold;
+}
+.slope {
+    fill: white;
+    font-weight: bold;
+}
+/*.attr({"color": "white", "text-anchor": "middle", "alignment-baseline": "central" })}*/

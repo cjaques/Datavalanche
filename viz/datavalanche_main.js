@@ -1,128 +1,69 @@
-//
+// 
 // Copyright T. Kulak, E. Pignat, C.Jaques, name DOT surname AT idiap DOT ch, December 2018
 //
 //      DATAVALANCHE PROJECT DECEMBER 2018
 //
 //      Project for K.Benzi's EPFL course "Data Visualisation"
-//
+// 
 
 // ------------------------------------------------------------------------ GLOBALS
 var map;
 var feature;
-var avalanches_points;
-var avalanche_points_features;
-
-
+var avalancheGroup;
+var slider1;
+var group1;
 // ------------------------------------------------------------------------ MAPPLOT CLASS
 class MapPlot {
 
     constructor(svg_element_id) {
-        map = L.map('map').setView([46.8, 8.2], 8); // center and zoom for Switzerland
-        const mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+        avalancheGroup = L.layerGroup();
+        var avalanche_icons = [];
+
+        for (var i=0; i< 6; i++){
+            avalanche_icons.push( L.icon({
+                iconUrl: 'icons/avalanche_icon_' + i + '-01.png',
+                shadowUrl: 'icons/avalanche_icon_shadow-01.png',
+                iconSize:     [50, 50], // size of the icon
+                shadowSize:   [50, 50], // size of the shadow
+                iconAnchor:   [25, 37], // point of the icon which will correspond to marker's location
+                shadowAnchor: [25, 37  ],  // the same for the shadow
+                popupAnchor:  [0, 0]// point from which the popup should open relative to the iconAnchor
+            }));
+        }
+
+        var avalance_points = d3.csv("data/locations_avalanches_fullfeatures.csv", function(data){
+            data.forEach(function(d) {
+
+                var marker = L.marker([d['lat'], d['lon']], {
+                    achieve: 0.3, riseOnHover: true,
+                    icon: avalanche_icons[parseInt(d['forecasted']) || 0],
+                    opacity: 0.5, expo: d['orientation'], dead: d['dead'], inclination: parseInt(d['inclination']) || 0})
+                    .on("mouseover", onMouseOver)
+                    .on("mouseout", onMouseOut)
+                    .addTo(avalancheGroup);
+            });
+        });
+
         this.mainLayer = L.tileLayer(
-            'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; ' + mapLink + ' Contributors',
+            'https://tile.osm.ch/switzerland/{z}/{x}/{y}.png', {
+            attribution:  '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             maxZoom: 16,
-            }).addTo(map);
+            });
 
-        // Initialize the SVG layer
-        map._initPathRoot()
+        map = L.map('map', {layers: [this.mainLayer, avalancheGroup]}).setView([46.6, 8.2], 9); // center and zoom for Switzerland
 
-        // DEBUG BELOW -- trying to add a sliderControl
-        // slider control
-        // let sliderControl = L.control.sliderControl({position: "topright", layer: this.mainLayer});
-        // //Make sure to add the slider to the map ;-)
-        // map.addControl(sliderControl);
-        // //And initialize the slider
-        // sliderControl.startSlider();
+
+        $.getJSON("data/gps_12.geojson",function(data){
+            var heat = L.heatLayer(data.features[0].coordinates, {radius:15, gradient: {0.2: 'blue', 0.6: 'lime', 1: 'yellow'}});
+            map.addLayer(heat);
+        });
+
+
+        // map._initPathRoot()
 
         // Pick up the SVG from the map object
         this.svg = d3.select("#map").select("svg");
         // this.g = this.svg.append("g");
-
-        const file_list =  read_text_file("data/files.txt"); // files.txt and files_2.txt contain a list of all GPX files
-        let array_list = file_list.split("\n");
-        let all_promises = [];
-
-        // read avalanches locations, including orientation
-        all_promises.push(new Promise(function(resolve, reject){
-            d3.csv("data/locations_avalanches_fullfeatures.csv", function(data){
-                resolve(data);
-            });
-        }));
-
-        // go through all GPX files in list
-        let idx = 0;
-        for(let i=0; i<array_list.length - 1; i++){ // -1 because sometimes the last item of the list is empty
-            all_promises.push(new Promise(function(resolve, reject){
-                d3.xml("data/" + array_list[i], function(data){
-                    // interesting way to parse XML --> https://github.com/chrissng/d3.gpx
-                    let lineString = [];
-                    let nameli = ""; // why not Swiss German ?
-
-                    // read name of outing
-                    d3.select(data).selectAll("rte").selectAll("name").each(function(){
-                        nameli = this.innerHTML;
-                    })
-                    d3.select(data).selectAll("trk").selectAll("name").each(function(){
-                        nameli = this.innerHTML;
-                    })
-
-                    // similarly, try to get the outing's date (not all GPX have the date included)
-                    d3.select(data).selectAll("rte").selectAll("name").each(function(){
-                        nameli = this.innerHTML;
-                    })
-                    d3.select(data).selectAll("trk").selectAll("name").each(function(){
-                        nameli = this.innerHTML;
-                    })
-
-                    // GPX traces
-                    d3.select(data).selectAll("rte").selectAll("rtept").each(function() {
-                        let lat = parseFloat(d3.select(this).attr("lat"));
-                        let lon = parseFloat(d3.select(this).attr("lon"));
-                        lineString.push({"lon": lon, "lat" : lat, "name":nameli, "id":idx});
-                    });
-                    d3.select(data).selectAll("trkseg").selectAll("trkpt").each(function() {
-                        let lat = parseFloat(d3.select(this).attr("lat"));
-                        let lon = parseFloat(d3.select(this).attr("lon"));
-                        lineString.push({"lon": lon, "lat" : lat, "name":nameli, "id":idx});
-                    });
-                    resolve(lineString);
-                    idx += 1; // update idx to be able to differentiate gpx traces
-                })
-            }));
-        };
-
-        // // Once all data loading promises have been solved
-        Promise.all(all_promises).then((results) =>{
-            avalanches_points = results[0];
-            let gpx_data = [];
-            for (let i=1; i< array_list.length-1; i++){
-                gpx_data.push(results[i]);
-            }
-
-            // Draw a heatmap from all GPX points
-            // TODO : update heatlayer sequentially, adding gpx points
-            let points_array = [];
-            // everything within a double loop to be a bit faster
-            for(let i=0; i<gpx_data.length; i++){
-                for(let j=0; j<gpx_data[i].length; j++){
-                    points_array.push([gpx_data[i][j]['lat'], gpx_data[i][j]['lon'], 0.1])
-                }
-            }
-            let heat = L.heatLayer(points_array, {radius:15, gradient: {0.2: 'blue', 0.6: 'lime', 1: 'yellow'}});
-            heat.addTo(map)
-
-
-            // Draw avalanches
-            avalanche_points_features = this.svg.selectAll("g")
-                .data(avalanches_points)
-                .enter()
-                .append("g");
-
-            map.on("viewreset", update_map);
-            update_map();
-        });
     }
 
 }
@@ -130,40 +71,147 @@ class MapPlot {
 
 
 // ------------------------------------------------------------------------ HELPER FUNCTIONS
-function update_map(){
-    let count = 0;
-    console.log(map.getZoom());
-    avalanche_points_features
-        .attr("class", "avalanche")
-        .attr("transform", function(d){return "translate("+map.latLngToLayerPoint([d["lat"], d["lon"]]).x+","+map.latLngToLayerPoint([d["lat"], d["lon"]]).y+")"})
-         .style("r", function(){return map.getZoom() - 3;})
-        .html(function(d,i) {
-          let valueOrientation = d["orientation"], valueForecasted =d["forecasted"], valueDead =d["dead"], valueElevation=d["elevation"];
-            d = $.extend(d,
-             {'width': 100,
-             'valueOrientation':function(d){
-                 if(map.getZoom()>=12){
-                   return ""+valueOrientation;}
-                   else{return "";}
-                 },
-             'valueForecasted':function(d){
-                 if(map.getZoom()>=12){
-                   return ""+Math.floor(valueForecasted)+"/5";}
-                   else{return "";}
-                 },
-             'valueDead':function(d){
-                 if(map.getZoom()>=12){
-                   return ""+valueDead+" dead";}
-                   else{return "";}
-                 },
-             'valueElevation':function(d){
-                 if(map.getZoom()>=12){
-                   return ""+valueElevation+"m";}
-                   else{return "";}
-                 }
-             })
-            return ich.avalanche(d, true);
-        });
+
+function onMouseOver(e){
+    e.target.setOpacity(1.);
+    var size = 40;
+    var point = map.latLngToContainerPoint(e.latlng);
+    var tooltip = d3.select(map.getContainer())
+        .append("div")
+        .attr("class", "tooltip")
+        // Calculating according to marker and tooltip size
+        .style({ left: point.x - 19 + "px", top: point.y - 20  - 60 + "px" })
+        .node();
+    displayExpo(tooltip, e.target.options, size);
+
+    var tooltip2 = d3.select(map.getContainer())
+        .append("div")
+        .attr("class", "tooltip")
+        // Calculating according to marker and tooltip size
+        .style({ left: point.x - 19 - 40+ "px", top: point.y - 30  + "px" })
+        .node();
+
+    displayDead(tooltip2, e.target.options, size);
+
+    var tooltip3 = d3.select(map.getContainer())
+        .append("div")
+        .attr("class", "tooltip")
+        // Calculating according to marker and tooltip size
+        .style({ left: point.x - 19 + 40+ "px", top: point.y - 30  + "px" })
+        .node();
+
+    displayInclination(tooltip3, e.target.options, size);
+}
+function onMouseOut(e){
+    e.target.setOpacity(.5);
+
+    d3.select(map.getContainer()).selectAll(".tooltip").remove();
+}
+
+function displayInclination(node, value, size){
+    if(value.inclination != 0)
+    {
+    var expo_pane = d3.select(node)
+        .append("svg")
+        .attr("width", size)
+        .attr("height", size);
+    //
+
+
+    expo_pane.append("circle")
+        .attr("cx", size/2)
+        .attr("cy", size/2)
+        .attr("r", size/2)
+        .attr({'fill': 'black', 'opacity': 0.0})
+        .transition()
+        .attr({'fill': 'black', 'opacity': 0.8})
+    ;
+
+    expo_pane.append("g")
+        .attr("transform", "translate(" + [size / 2, size / 2] + ")")
+        .append("text")
+        .attr('opacity', 0.)
+        .attr('class', 'bubble slope')
+        .text(value.inclination + String.fromCharCode(176))
+        .transition()
+        .attr('opacity', 0.8);
+
+    }
+}
+
+function displayDead(node, value, size){
+    var expo_pane = d3.select(node)
+        .append("svg")
+        .attr("width", size)
+        .attr("height", size);
+    //
+    var lineFunction = d3.svg.line()
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
+        .interpolate('linear')
+
+    var width = 11;
+    var lineData = [
+        { "x": size/2 - width/2,   "y": -width},
+        { "x": size/2 - width/2,  "y": 0},
+        { "x": size/2 + width/2,  "y": 0},
+        { "x": size/2 + width/2,  "y": width},
+        { "x": size/2 + 3 * width/2,  "y": width},
+        { "x": size/2 + 3 * width/2,  "y": 2 * width},
+        { "x": size/2 + width/2,  "y": 2 * width},
+        { "x": size/2 + width/2,  "y": size},
+        { "x": size/2 - width/2,  "y": size},
+        { "x": size/2 - width/2,  "y": 2 * width},
+        { "x": size/2 - 3 * width/2,  "y": 2 * width},
+        { "x": size/2 - 3 * width/2,  "y": width},
+        { "x": size/2 - width/2,  "y": width},
+    ];
+
+    expo_pane.append("path")
+        .attr("d", lineFunction(lineData))
+        .attr("fill", 'black')
+        .attr("opacity", 0.0)
+        .attr("stroke", "black")
+        .attr("stroke-width", 2)
+        .transition()
+        .attr({'fill': 'black', 'opacity': 0.8});
+
+
+    expo_pane.append("g")
+        .attr("transform", "translate(" + [size / 2, size / 2] + ")")
+        .attr('class', "bubble dead")
+        .append("text")
+        .attr('opacity', 0.)
+        .text(value.dead)
+        .transition()
+        .attr('opacity', 0.8)
+    ;
+}
+function displayExpo(node, value, size){
+    var size = 40;
+    var expo_pane = d3.select(node)
+        .append("svg")
+        .attr("width", size)
+        .attr("height", size);
+    //
+    expo_pane.append("circle")
+        .attr("cx", size/2)
+        .attr("cy", size/2)
+        .attr("r", size/2)
+        .attr({'fill': 'white', 'opacity': 0.0})
+        .transition()
+        .attr({'fill': 'white', 'opacity': 0.8})
+    ;
+
+    expo_pane.append("g")
+        .attr("transform", "translate(" + [size / 2, size / 2] + ")")
+        .append("text")
+        .attr('class', 'bubble expo')
+        .attr('opacity', 0.)
+        .text(value.expo)
+        .transition()
+        .attr('opacity', 0.8)
+    ;
 }
 
 
@@ -179,19 +227,3 @@ function whenDocumentLoaded(action) {
 whenDocumentLoaded(() => {
     plot_object = new MapPlot('Datavalanche');
 });
-
-
-function read_text_file(filename){
-    let return_text;
-    let rawfile = new XMLHttpRequest();
-    rawfile.open("GET", filename, false);
-    rawfile.onreadystatechange = function (){
-        if(rawfile.readyState === 4){
-            if(rawfile.status === 200){
-                return_text = rawfile.responseText;
-            }
-        }
-    }
-    rawfile.send(null);
-    return return_text;
-}
