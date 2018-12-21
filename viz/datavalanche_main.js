@@ -10,8 +10,7 @@
 var map;
 var feature;
 var avalancheGroup;
-var slider1;
-var group1;
+
 // ------------------------------------------------------------------------ MAPPLOT CLASS
 class MapPlot {
 
@@ -59,11 +58,8 @@ class MapPlot {
         });
 
 
-        // map._initPathRoot()
-
         // Pick up the SVG from the map object
         this.svg = d3.select("#map").select("svg");
-        // this.g = this.svg.append("g");
     }
 
 }
@@ -79,7 +75,6 @@ function onMouseOver(e){
     var tooltip = d3.select(map.getContainer())
         .append("div")
         .attr("class", "tooltip")
-        // Calculating according to marker and tooltip size
         .style({ left: point.x - 19 + "px", top: point.y - 20  - 60 + "px" })
         .node();
     displayExpo(tooltip, e.target.options, size);
@@ -87,7 +82,6 @@ function onMouseOver(e){
     var tooltip2 = d3.select(map.getContainer())
         .append("div")
         .attr("class", "tooltip")
-        // Calculating according to marker and tooltip size
         .style({ left: point.x - 19 - 40+ "px", top: point.y - 30  + "px" })
         .node();
 
@@ -96,7 +90,6 @@ function onMouseOver(e){
     var tooltip3 = d3.select(map.getContainer())
         .append("div")
         .attr("class", "tooltip")
-        // Calculating according to marker and tooltip size
         .style({ left: point.x - 19 + 40+ "px", top: point.y - 30  + "px" })
         .node();
 
