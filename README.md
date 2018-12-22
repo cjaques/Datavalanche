@@ -4,8 +4,8 @@
 
 This repository holds all code and data of our project for the "Data Visualisation" course taught at EPFL by [K. Benzi](https://www.kirellbenzi.com/), Fall semester of 2018.
 
-Example of a single GPS trace, from Ovronaz to Dents de Morcles. 
-![Dents de Morcles from Ovronaz](data/morcles.png)
+Screenshot of the heatmap and the avalanches around Val Ferret
+![Dents de Morcles from Ovronaz](data/screenshot.png)
 
 ## Repo organization
 
