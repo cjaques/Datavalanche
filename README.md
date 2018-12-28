@@ -4,7 +4,9 @@
 
 This repository holds all code and data of our project for the "Data Visualisation" course taught at EPFL by [K. Benzi](https://www.kirellbenzi.com/), Fall semester of 2018.
 
-Screenshot of the heatmap and the avalanches around Val Ferret
+See the code live [here](http://idiap.ch/~epignat/viz/). You can find a short screencast of our visualisation [here](https://www.youtube.com/watch?v=w8YDJJ-be24&feature=youtu.be)
+
+Hereunder is a screenshot of the heatmap and the avalanches around Val Ferret
 ![Dents de Morcles from Ovronaz](data/screenshot.png)
 
 ## Repo organization
@@ -14,6 +16,9 @@ Should be pretty self-explanatory
 ```
 data ----- viz ----- scripts
 ```
+* __Data__ has both the data we scraped from camptocamp and the database given out by the [SLF](http:www.slf.ch)
+* __Viz__ has the code for the actual data visualisation, in JS
+* __Scripts__ contains Python code we used to scrape data 
 
 
 ## Usefull links
